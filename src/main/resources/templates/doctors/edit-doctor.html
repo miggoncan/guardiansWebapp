@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker.standalone.min.css" rel="stylesheet"/>
+<title th:text="#{edit-doctor.title}"></title>
+</head>
+<body>
+	<div th:include="navbar.html"></div>
+
+	<div class="container my-2 col-lg-10">
+		<h1 class="my-2" th:text="#{doctor.heading}"></h1>
+
+		<form th:action="#{url.doctors}" method="POST" name="editDoctorForm">
+			<!-- General information -->
+			<div class="container my-2">
+				<h2 th:text="#{doctor.general}"></h2>
+				<div class="form-group d-none">
+					<input type="text" class="form-control" id="id" name="id"
+						th:value="${doctor} ? ${doctor.id} : ''">
+				</div>
+				<div class="form-group">
+					<label for="lastNames" th:text="#{doctor.lastNames}"></label> 
+					<input type="text" class="form-control" id="lastNames" name="lastNames" required="true"
+						th:placeholder="#{edit-doctor.enterLastNames}"
+						th:value="${doctor} ? ${doctor.lastNames} : ''">
+				</div>
+				<div class="form-group">
+					<label for="firstName" th:text="#{doctor.firstName}"></label> 
+					<input type="text" class="form-control" id="firstName" name="firstName" required="true"
+						th:placeholder="#{edit-doctor.enterFirstName}"
+						th:value="${doctor} ? ${doctor.firstName} : ''">
+				</div>
+				<div class="form-group">
+					<label for="email" th:text="#{doctor.email}"></label> 
+					<input type="email" class="form-control" id="email" name="email" required="true"
+						th:placeholder="#{edit-doctor.enterEmail}"
+						th:value="${doctor} ? ${doctor.email} : ''">
+				</div>
+				<div class="form-group" th:if="not ${doctor}">
+					<label for="startDate" th:text="#{edit-doctor.startDate}"></label>
+					<input type="text" class="form-control datepicker w-50" id="startDate" name="startDate" required="true"
+						th:placeholder="#{edit-doctor.selectStartDate}" 
+						th:data-language="${#locale}" data-format="yyyy-mm-dd"
+						data-orientation="auto bottom">
+					<div class="invalid-feedback" th:text="#{edit-doctor.invalidDate}"></div>
+				</div>
+				<div class="form-group d-none">
+					<input type="text" class="form-control" id="status" name="status"
+						th:value="${doctor} ? ${doctor.status} : ''">
+				</div>
+			</div>
+
+			<!-- Shift configuration -->
+			<div class="container">
+				<h2 th:text="#{doctor.preferences}"></h2>
+				<div class="form-check my-2">
+					<input type="checkbox" class="form-check-input" name="doesCycleShifts"
+						id="doesCycleShifts" th:checked="${shiftConfig.doesCycleShifts}">
+					<label class="form-check-label" for="doesCycleShifts"
+						th:text="#{doctor.cyclicShifts}"></label>
+				</div>
+
+				<div class="form-check my-2">
+					<input type="checkbox" class="form-check-input" id="doesShifts" name="doesShifts"
+						data-toggle="collapse" data-target="#collapseShifts"
+						aria-expanded="false" aria-controls="collapseShifts"
+						th:checked="${shiftConfig.maxShifts} > 0 or ${shiftConfig.hasShiftsOnlyWhenCycleShifts}">
+					<label class="form-check-label" for="doesShifts"
+						th:text="#{doctor.shifts}"></label>
+				</div>
+				<div class="collapse ml-4" id="collapseShifts">
+					<div class="form-check my-2">
+						<input type="checkbox" class="form-check-input" name="hasShiftsOnlyWhenCycleShifts"
+							id="hasShiftsOnlyWhenCycleShifts" data-toggle="collapse"
+							data-target=".multi-collapse-shifts" aria-expanded="false"
+							aria-controls="collapseShiftsNum collapseShiftPreferences"
+							th:checked="${shiftConfig.hasShiftsOnlyWhenCycleShifts}">
+						<label class="form-check-label" for="hasShiftsOnlyWhenCycleShifts"
+							th:text="#{edit-doctor.shiftsOnlyWhenCS}"></label>
+					</div>
+					<div class="collapse multi-collapse-shifts" id="collapseShiftsNum">
+						<div class="form-group">
+							<label for="minShifts" th:text="#{min}"></label> 
+							<input type="number" class="form-control w-50" id="minShifts" name="minShifts"
+								th:placeholder="#{edit-doctor.enterMinShifts}"
+								th:value="${shiftConfig.minShifts}">
+						</div>
+						<div class="form-group">
+							<label for="maxShifts" th:text="#{max}"></label> 
+							<input type="number" class="form-control w-50" id="maxShifts" name="maxShifts"
+								th:placeholder="#{edit-doctor.enterMaxShifts}"
+								th:value="${shiftConfig.maxShifts}">
+							<div class="invalid-feedback" th:text="#{edit-doctor.invalidMaxShifts}"></div>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-check my-2">
+					<input type="checkbox" class="form-check-input" name="doesConsultations"
+						id="doesConsultations" data-toggle="collapse"
+						data-target=".multi-collapse-consultations" aria-expanded="false"
+						aria-controls="collapseConsultations collapseConsultationPreferences"
+						th:checked="${shiftConfig.numConsultations} > 0"> 
+					<label class="form-check-label" for="doesConsultations"
+						th:text="#{doctor.consultations}"></label>
+				</div>
+				<div class="collapse multi-collapse-consultations  ml-4" id="collapseConsultations">
+					<div class="form-group">
+						<label for="numConsultations" th:text="#{num}"></label> 
+						<input type="number" class="form-control w-50" id="numConsultations" name="numConsultations"
+							th:placeholder="#{edit-doctor.enterNumConsultations}"
+							th:value="${shiftConfig.numConsultations}">
+					</div>
+				</div>
+
+				<!-- Shift preferences -->
+				<div class="collapse my-2" id="collapseShowMore">
+					<div class="container my-2">
+						<button class="btn btn-secondary" id="showMoreButton"
+							type="button" data-toggle="collapse"
+							data-target="#collapsePreferences" aria-expanded="false"
+							aria-controls="collapsePreferences" th:text="#{doctor.showMore}"></button>
+						<button class="btn btn-secondary" id="showLessButton"
+							type="button" data-toggle="collapse"
+							data-target="#collapsePreferences" aria-expanded="false"
+							aria-controls="collapsePreferences" th:text="#{doctor.showLess}"></button>
+					</div>
+					<div class="collapse ml-4" id="collapsePreferences">
+						<div class="collapse multi-collapse-shifts" id="collapseShiftPreferences">
+							<fieldset>
+								<legend th:text="#{doctor.wantedShifts}"></legend>
+								<div class="form-check form-check-inline" th:each="allowedShift : ${allowedShifts}">
+								  <input class="form-check-input" type="checkbox" th:id="wantedShift + ${allowedShift.id}" name="wantedShifts"
+								  	th:value="${allowedShift.id}" th:checked="${#lists.contains(shiftConfig.wantedShiftsList, allowedShift.shift)}">
+								  <label class="form-check-label" th:id="wantedShift + ${allowedShift.id}" th:text="#{${allowedShift.shift}}"></label>
+								</div>
+							</fieldset>
+							<fieldset>
+								<legend th:text="#{doctor.unwantedShifts}"></legend>
+								<div class="form-check form-check-inline" th:each="allowedShift : ${allowedShifts}">
+								  <input class="form-check-input" type="checkbox" th:id="unwantedShift + ${allowedShift.id}" name="unwantedShifts"
+								  	th:value="${allowedShift.id}" th:checked="${#lists.contains(shiftConfig.unwantedShiftsList, allowedShift.shift)}">
+								  <label class="form-check-label" th:id="unwantedShift + ${allowedShift.id}" th:text="#{${allowedShift.shift}}"></label>
+								</div>
+							</fieldset>
+						</div>
+						<fieldset class="collapse multi-collapse-consultations" id="collapseConsultationPreferences">
+							<legend th:text="#{doctor.wantedConsultations}"></legend>
+							<div class="form-check form-check-inline"  th:each="allowedShift : ${allowedShifts}">
+							  <input class="form-check-input" type="checkbox" th:id="wantedConsultation + ${allowedShift.id}" name="wantedConsultations"
+							  	th:value="${allowedShift.id}" th:checked="${#lists.contains(shiftConfig.wantedConsultationsList, allowedShift.shift)}">
+							  <label class="form-check-label" th:id="wantedConsultation + ${allowedShift.id}" th:text="#{${allowedShift.shift}}"></label>
+							</div>
+						</fieldset>
+					</div>
+				</div>
+			</div>
+			<div class="container">
+				<a class="btn my-2 btn-danger" role="button" th:href="#{url.doctors}" th:text="#{cancel}"></a>
+				<button type="submit" class="btn my-2 btn-success" th:text="#{submit}"></button>
+			</div>
+		</form>
+	</div>
+
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+		integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.min.js"></script>
+	<script>
+		jQuery(document).ready(function($) {
+			$('#startDate').datepicker({
+				format: $('#startDate').data('format'),
+				language: $('#startDate').data('language'),
+				orientation: $('#startDate').data('orientation')
+			});
+			$('#showLessButton').hide();
+			if ($('#doesShifts').is(':checked')) {
+				$('#collapseShifts').collapse('show');
+				$('#collapseShowMore').collapse('show');
+			}
+			if (!$('#hasShiftsOnlyWhenCycleShifts').is(':checked')) {
+				$('#collapseShiftsNum').collapse('show');
+				$('#collapseShiftPreferences').collapse('show');
+			}
+			if ($('#doesConsultations').is(':checked')) {
+				$('#collapseConsultations').collapse('show');
+				$('#collapseConsultationPreferences').collapse('show');
+				$('#collapseShowMore').collapse('show');
+			}
+			
+			// Show more and show less buttons
+			$('#showMoreButton').click(function() {
+				$(this).hide();
+				$('#showLessButton').show();
+			});
+			$('#showLessButton').click(function() {
+				$(this).hide();
+				$('#showMoreButton').show();
+			});
+			
+			// This function will show the collapse #collapseShowMore depending on the state
+			// of #doesShifts and #doesConsultations
+			const onClick = function() {
+				if($('#doesShifts').is(':checked') || $('#doesConsultations').is(':checked')) {
+					if(!$('#collapseShowMore').is('.show')) {
+						$('#collapseShowMore').collapse('show');
+					}
+				} else {
+					$('#collapseShowMore').collapse('hide');
+				}
+			}
+			$('#doesShifts').click(onClick);
+			$('#doesConsultations').click(onClick);
+		});
+		
+		$('#startDate').focusout(function() {
+			if (!Date.parse($(this).val())) {
+				$(this).addClass('is-invalid');
+			} else {
+				$(this).removeClass('is-invalid');
+			}
+		});
+		
+		$('#maxShifts').focusout(function() {
+			if ($('#minShifts').val() > $(this).val()) {
+				console.log('Is invalid');
+				$(this).addClass('is-invalid');
+			} else {
+				$(this).removeClass('is-invalid');
+				console.log('Is Valid');
+			}
+		});
+	</script>
+</body>
+</html>

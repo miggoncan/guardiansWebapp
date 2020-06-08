@@ -1,0 +1,37 @@
+<nav class="navbar navbar-expand-sm navbar-light bg-light">
+	<a class="navbar-brand" th:href="#{url.home}" th:text="#{navbar.title}"></a>
+	<button class="navbar-toggler" type="button" data-toggle="collapse"
+		data-target="#navbarSupportedContent"
+		aria-controls="navbarSupportedContent" aria-expanded="false"
+		aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon"></span>
+	</button>
+
+	<div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+			<li class="nav-item active">
+				<a class="nav-link" th:href="#{url.doctors}" th:text="#{navbar.doctors}"> 
+					<span class="sr-only">(current)</span>
+				</a>
+			</li>
+			<li class="nav-item active">
+				<a class="nav-link"	th:href="#{url.schedules}" th:text="#{navbar.schedules}">
+					<span class="sr-only">(current)</span>
+				</a>
+			</li>
+		</ul>
+
+		<div class="dropdown nav navbar-nav navbar-right mr-4">
+			<button class="btn btn-info dropdown-toggle" type="button"
+				id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
+				aria-expanded="false" th:text="#{language}"></button>
+			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+				<a class="dropdown-item" href="?lang=es">Español</a> 
+				<a class="dropdown-item" href="?lang=us">English</a>
+			</div>
+		</div>
+		<form class="form-inline my-lg-0" th:action="#{url.logout}">
+			<button class="btn my-sm-0" type="submit" th:text="#{navbar.logout}"></button>
+		</form>
+	</div>
+</nav>

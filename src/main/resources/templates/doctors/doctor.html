@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous">
+
+<title th:text="#{doctor.title} + ' ' + ${doctor.lastNames}"></title>
+</head>
+<body>
+	<div th:include="navbar.html"></div>
+
+	<div class="container my-2 col-lg-10">
+		<div class="container my-2">
+			<span class="h1 w-75" th:text="#{doctor.heading}"></span>
+			<a class="btn btn-primary float-right" role="button"
+				th:text="#{doctor.edit}" th:href="${doctor.links['updateDoctor']}"
+				th:if="${#maps.containsKey(doctor.links, 'updateDoctor')}"></a>
+		</div>
+
+		<div class="container my-2">
+			<h2 th:text="#{doctor.general}"></h2>
+			<table class="table">
+				<tr>
+					<td th:text="#{doctor.lastNames}"></td>
+					<td class="w-75" th:text="${doctor.lastNames}"></td>
+				</tr>
+				<tr>
+					<td th:text="#{doctor.firstName}"></td>
+					<td class="w-75" th:text="${doctor.firstName}"></td>
+				</tr>
+				<tr>
+					<td th:text="#{doctor.email}"></td>
+					<td class="w-75" th:text="${doctor.email}"></td>
+				</tr>
+				<tr>
+					<td th:text="#{doctor.available}"></td>
+					<td class="w-75"
+						th:if="${#maps.containsKey(doctor.links, 'updateDoctor')}"
+						th:text="#{yes}"></td>
+					<td class="w-75"
+						th:unless="${#maps.containsKey(doctor.links, 'updateDoctor')}"
+						th:text=#{no}></td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="container" th:if="${shiftConfig}">
+			<h2 th:text="#{doctor.preferences}"></h2>
+			<table class="table">
+				<tr>
+					<td th:text=#{doctor.cyclicShifts}></td>
+					<td class="w-75" th:if="${shiftConfig.doesCycleShifts}"
+						th:text="#{yes}"></td>
+					<td class="w-75" th:unless="${shiftConfig.doesCycleShifts}"
+						th:text="#{no}"></td>
+				</tr>
+				<tr>
+					<td th:text="#{doctor.shifts}"></td>
+					<td class="w-75"
+						th:if="${shiftConfig.maxShifts} > 0 or ${shiftConfig.hasShiftsOnlyWhenCycleShifts}">
+						<span th:if="${shiftConfig.hasShiftsOnlyWhenCycleShifts}"
+						th:text="#{doctor.onlyWhenCS}"></span>
+						<ul class="list-group"
+							th:unless="${shiftConfig.hasShiftsOnlyWhenCycleShifts}">
+							<li class="list-group-item">
+								<span th:text="#{min}"></span>
+								<span th:text="${shiftConfig.minShifts}"></span>
+							</li>
+							<li class="list-group-item">
+								<span th:text="#{max}"></span>
+								<span th:text="${shiftConfig.maxShifts}"></span>
+							</li>
+						</ul>
+					</td>
+					<td class="w-75"
+						th:unless="${shiftConfig.maxShifts} > 0 or ${shiftConfig.hasShiftsOnlyWhenCycleShifts}"
+						th:text="#{no}"></td>
+				</tr>
+				<tr th:unless="${shiftConfig.hasShiftsOnlyWhenCycleShifts}">
+					<td th:text="#{doctor.consultations}"></td>
+					<td class="w-75" th:if="${shiftConfig.numConsultations} > 0"
+						th:text="${shiftConfig.numConsultations}"></td>
+					<td class="w-75" th:unless="${shiftConfig.numConsultations} > 0"
+						th:text="#{no}"></td>
+				</tr>
+			</table>
+			<div class="container my-2"
+				th:if="${shiftConfig.maxShifts} > 0 and ${!shiftConfig.hasShiftsOnlyWhenCycleShifts}">
+				<div class="containe my-2">
+					<button class="btn btn-secondary" id="showMoreButton" type="button"
+						data-toggle="collapse" data-target="#collapsePreferences"
+						aria-expanded="false" aria-controls="collapsePreferences"
+						th:text="#{doctor.showMore}"></button>
+					<button class="btn btn-secondary" id="showLessButton" type="button"
+						data-toggle="collapse" data-target="#collapsePreferences"
+						aria-expanded="false" aria-controls="collapsePreferences"
+						th:text="#{doctor.showLess}"></button>
+				</div>
+				<div class="collapse" id="collapsePreferences">
+					<table class="table my-2">
+						<tr th:if="${shiftConfig.maxShifts} > 0">
+							<td th:text="#{doctor.wantedShifts}"></td>
+							<td class="w-75"
+								th:if="${#lists.isEmpty(shiftConfig.wantedShifts)}"
+								th:text="#{none}"></td>
+							<td class="w-75"
+								th:unless="${#lists.isEmpty(shiftConfig.wantedShifts)}">
+								<ul class="list-group">
+									<li class="list-group-item"
+										th:each="day : ${shiftConfig.wantedShifts}"
+										th:text="#{${day.shift}}"></li>
+								</ul>
+							</td>
+						</tr>
+						<tr th:if="${shiftConfig.maxShifts} > 0">
+							<td th:text="#{doctor.unwantedShifts}"></td>
+							<td class="w-75"
+								th:if="${#lists.isEmpty(shiftConfig.unwantedShifts)}"
+								th:text="#{none}"></td>
+							<td class="w-75"
+								th:unless="${#lists.isEmpty(shiftConfig.unwantedShifts)}">
+								<ul class="list-group">
+									<li class="list-group-item"
+										th:each="day : ${shiftConfig.unwantedShifts}"
+										th:text="#{${day.shift}}"></li>
+								</ul>
+							</td>
+						</tr>
+						<tr th:if="${shiftConfig.numConsultations} > 0">
+							<td th:text="#{doctor.wantedConsultations}"></td>
+							<td class="w-75"
+								th:if="${#lists.isEmpty(shiftConfig.wantedConsultations)}"
+								th:text="#{none}"></td>
+							<td class="w-75"
+								th:unless="${#lists.isEmpty(shiftConfig.wantedConsultations)}">
+								<ul class="list-group">
+									<li class="list-group-item"
+										th:each="day : ${shiftConfig.wantedConsultations}"
+										th:text="#{${day.shift}}"></li>
+								</ul>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<a class="btn my-2" role="button"
+			th:href="#{url.doctors}" th:text="#{back}"></a>
+	</div>
+
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+		integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+		crossorigin="anonymous"></script>
+	<script>
+		jQuery(document).ready(function($) {
+			// Initially hide the showLessButton
+			$('#showLessButton').hide();
+		});
+		// Show more and show less buttons
+		$('#showMoreButton').click(function() {
+			$(this).hide();
+			$('#showLessButton').show();
+		});
+		$('#showLessButton').click(function() {
+			$(this).hide();
+			$('#showMoreButton').show();
+		});
+	</script>
+</body>
+</html>

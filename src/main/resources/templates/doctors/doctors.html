@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous">
+
+<title th:text="#{doctors.title}"></title>
+</head>
+<body>
+	<div th:include="navbar.html"></div>
+
+	<div class="container col-lg-10">
+		<div class="container my-4">
+			<span class="h2" th:text="#{doctors.heading}"></span>
+			<a class="btn btn-primary float-right" role="button"
+				th:text="#{doctors.new}" th:href="#{url.edit-doctor}"></a>
+		</div>
+		
+		<input class="form-control my-2" id="searchDoctorBar" type="text"
+			placeholder="Buscar..">
+			
+		<table class="table table-hover my-2" id="doctorTable">
+			<tr>
+				<th scope="row" th:text="#{doctors.lastNames}"></th>
+				<th scope="row" th:text="#{doctors.firstName}"></th>
+			</tr>
+			<tr th:each="doctor : ${doctors}" scope="row" 
+				class="clickable-row" style="cursor: pointer" th:data-href="${doctor.links['self']}">
+				<td th:text="${doctor.lastNames}">Error</td>
+				<td th:text="${doctor.firstName}">Error</td>
+			</tr>
+		</table>
+	</div>
+
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+		integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+		crossorigin="anonymous"></script>
+	<script>
+		// Search bar
+		$(document).ready(function(){
+		  $("#searchDoctorBar").on("keyup", function() {
+		    var value = $(this).val().toLowerCase();
+		    $("#doctorTable tr:has(td)").filter(function() {
+		      $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+		    });
+		  });
+		});
+		// Redirect when clicking a row
+		jQuery(document).ready(function($) {
+		    $(".clickable-row").click(function() {
+		        window.location = $(this).data("href");
+		    });
+		});
+	</script>
+</body>
+</html>
