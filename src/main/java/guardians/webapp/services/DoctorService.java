@@ -1,19 +1,23 @@
 package guardians.webapp.services;
 
-import java.net.URI;
+import java.net.HttpCookie;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.client.Hop;
 import org.springframework.hateoas.client.Traverson;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,9 +40,14 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class DoctorService {
+	@Autowired
+	private Traverson traverson;
+	@Autowired
+	private RestTemplateBuilder restTemplateBuilder;
+	
 	@Value("${api.uri}")
 	private String restUri;
-
+	
 	@Value("${api.links.doctors}")
 	private String doctorsLink;
 	@Value("${api.links.doctor}")
@@ -50,13 +59,39 @@ public class DoctorService {
 	@Value("${api.links.shiftconf}")
 	private String shiftConfLink;
 	
-
-	/**
-	 * @return A {@link Traverson} pointing to the REST service URL, and accepting
-	 *         the required {@link MediaTypes}
-	 */
-	private Traverson getTraverson() {
-		return new Traverson(URI.create(restUri), MediaTypes.HAL_JSON);
+	private HttpHeaders getSessionHeaders() {
+		log.info("Request to get session headers");
+		HttpHeaders headers = new HttpHeaders();
+		ResponseEntity<Object> resp = restTemplateBuilder.build()
+				.getForEntity(restUri, Object.class);
+		log.debug("The response is: " + resp);
+		List<String> cookiesStr = resp.getHeaders().get(HttpHeaders.SET_COOKIE);
+		log.debug("The list of cookies as Strings is: " + cookiesStr);
+		if (cookiesStr != null && !cookiesStr.isEmpty()) {
+			List<HttpCookie> cookies = new ArrayList<>();
+			// Parse the list of cookiesStr and add them to the cookies list
+			cookiesStr.stream().map((c) -> HttpCookie.parse(c)).forEachOrdered((cook) -> {
+                cook.forEach((a) -> {
+                    HttpCookie cookieExists = cookies.stream().filter(x -> a.getName().equals(x.getName())).findAny().orElse(null);
+                    if (cookieExists != null) {
+                        cookies.remove(cookieExists);
+                    }
+                    cookies.add(a);
+                });
+            });
+			log.debug("The extracted cookies are: " + cookies);
+			StringBuilder sb = new StringBuilder();
+            for (HttpCookie cookie : cookies) {
+                sb.append(cookie.toString()).append(";");
+            }
+            String mappedCookies = sb.toString();
+            log.debug("The cookies to be added are: " + mappedCookies);
+            headers.add(HttpHeaders.COOKIE, mappedCookies);
+		} else {
+			log.debug("No cookies to set found on the response");
+		}
+		log.info("The created headers are: " + headers);
+		return headers;
 	}
 	
 	/**
@@ -70,12 +105,8 @@ public class DoctorService {
 	 */
 	private Link getRootRequiredLink(String rel) {
 		log.info("Request to get root required link with rel: " + rel);
-		ParameterizedTypeReference<EntityModel<Object>> rootResTypeReference =
-				new ParameterizedTypeReference<EntityModel<Object>>() {};
-		EntityModel<Object> rootResource = getTraverson()
-				.follow("self")
-				.toObject(rootResTypeReference);
-
+		EntityModel<?> rootResource = restTemplateBuilder.build()
+				.getForObject(restUri, EntityModel.class);
 		log.debug("The root resource is: " + rootResource);
 		Link link = rootResource.getRequiredLink(rel);
 		log.info("The found link is: " + link);
@@ -87,10 +118,10 @@ public class DoctorService {
 	 */
 	public CollectionModel<EntityModel<Doctor>> getDoctors() {
 		log.info("Request to get all doctor resources");
-		ParameterizedTypeReference<CollectionModel<EntityModel<Doctor>>> doctorTypeReference = new ParameterizedTypeReference<CollectionModel<EntityModel<Doctor>>>() {
-		};
-		Traverson traverson = getTraverson();
-		CollectionModel<EntityModel<Doctor>> doctorResources = traverson.follow(doctorsLink)
+		ParameterizedTypeReference<CollectionModel<EntityModel<Doctor>>> doctorTypeReference = 
+				new ParameterizedTypeReference<CollectionModel<EntityModel<Doctor>>>() {};
+		CollectionModel<EntityModel<Doctor>> doctorResources = traverson
+				.follow(doctorsLink)
 				.toObject(doctorTypeReference);
 		log.info("The received resources are: " + doctorResources);
 		return doctorResources;
@@ -107,10 +138,10 @@ public class DoctorService {
 		log.info("Request to get doctor " + doctorId);
 		ParameterizedTypeReference<EntityModel<Doctor>> doctorTypeReference = 
 				new ParameterizedTypeReference<EntityModel<Doctor>>() {};
-		Traverson traverson = getTraverson();
 		EntityModel<Doctor> doctorEntity;
 		try {
-			doctorEntity = traverson.follow(Hop.rel(doctorLink).withParameter("doctorId", doctorId))
+			doctorEntity = traverson
+					.follow(Hop.rel(doctorLink).withParameter("doctorId", doctorId))
 					.toObject(doctorTypeReference);
 		} catch (NotFound e) {
 			log.info("The doctor was not found");
@@ -130,10 +161,10 @@ public class DoctorService {
 		log.info("Request to get shift configuration of doctor " + doctorId);
 		ParameterizedTypeReference<EntityModel<ShiftConfiguration>> shiftContTypeReference = 
 				new ParameterizedTypeReference<EntityModel<ShiftConfiguration>>() {};
-		Traverson traverson = getTraverson();
 		EntityModel<ShiftConfiguration> shiftConfigEntity;
 		try {
-			shiftConfigEntity = traverson.follow(Hop.rel(shiftConfLink).withParameter("doctorId", doctorId))
+			shiftConfigEntity = traverson
+					.follow(Hop.rel(shiftConfLink).withParameter("doctorId", doctorId))
 					.toObject(shiftContTypeReference);
 			log.info("The received resource is: " + shiftConfigEntity);
 		} catch (NotFound e) {
@@ -174,8 +205,8 @@ public class DoctorService {
 		log.debug("The link to create a doctor is: " + linkToSaveDoctor);
 
 		// Persist the doctor
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity<Doctor> req = new HttpEntity<Doctor>(doctor);
+		RestTemplate restTemplate = restTemplateBuilder.build();
+		HttpEntity<Doctor> req = new HttpEntity<Doctor>(doctor, this.getSessionHeaders());
 		ResponseEntity<Doctor> responseDoctor = restTemplate.exchange(linkToSaveDoctor.toUri(), 
 				methodToSaveDoctor, req, Doctor.class);
 		log.debug("The response doctor is: " + responseDoctor);
@@ -206,8 +237,8 @@ public class DoctorService {
 		Link linkToPersistShiftConf = this.getRootRequiredLink(shiftConfLink).expand(params);
 		log.debug("The link to PUT the shift configuration is: " + linkToPersistShiftConf);
 
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity<ShiftConfiguration> req = new HttpEntity<ShiftConfiguration>(shiftConf);
+		RestTemplate restTemplate = restTemplateBuilder.build();
+		HttpEntity<ShiftConfiguration> req = new HttpEntity<ShiftConfiguration>(shiftConf, this.getSessionHeaders());
 		ResponseEntity<ShiftConfiguration> respShiftConf = null;
 		try {
 			respShiftConf = restTemplate.exchange(linkToPersistShiftConf.toUri(), HttpMethod.PUT, req,

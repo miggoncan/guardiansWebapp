@@ -1,12 +1,10 @@
 package guardians.webapp.services;
 
-import java.net.URI;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.client.Traverson;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class AllowedShiftService {
-	@Value("${api.uri}")
-	private String restUri;
+	@Autowired
+	private Traverson traverson;
 	
 	@Value("${api.links.allowedshifts}")
 	private String allowedShiftsLink;
@@ -38,7 +36,6 @@ public class AllowedShiftService {
 		log.info("Request to get all allowed shift resources");
 		ParameterizedTypeReference<CollectionModel<EntityModel<AllowedShift>>> allowedShiftsTypeReference = 
 				new ParameterizedTypeReference<CollectionModel<EntityModel<AllowedShift>>>() {};
-		Traverson traverson = new Traverson(URI.create(restUri), MediaTypes.HAL_JSON);
 		CollectionModel<EntityModel<AllowedShift>> allowedShiftResources = traverson.follow(allowedShiftsLink)
 				.toObject(allowedShiftsTypeReference);
 		log.info("The received resources are: " + allowedShiftResources);
