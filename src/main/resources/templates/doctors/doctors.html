@@ -25,18 +25,22 @@
 		</div>
 		
 		<input class="form-control my-2" id="searchDoctorBar" type="text"
-			placeholder="Buscar..">
+			th:placeholder="#{search}">
 			
 		<table class="table table-hover my-2" id="doctorTable">
+		<thead>
 			<tr>
 				<th scope="row" th:text="#{doctors.lastNames}"></th>
 				<th scope="row" th:text="#{doctors.firstName}"></th>
 			</tr>
-			<tr th:each="doctor : ${doctors}" scope="row" 
+		</thead>
+		<tbody>
+			<tr th:each="doctor : ${doctors}"
 				class="clickable-row" style="cursor: pointer" th:data-href="${doctor.links['self']}">
 				<td th:text="${doctor.lastNames}">Error</td>
 				<td th:text="${doctor.firstName}">Error</td>
 			</tr>
+		</tbody>
 		</table>
 	</div>
 
@@ -52,22 +56,6 @@
 		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
 		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
 		crossorigin="anonymous"></script>
-	<script>
-		// Search bar
-		$(document).ready(function(){
-		  $("#searchDoctorBar").on("keyup", function() {
-		    var value = $(this).val().toLowerCase();
-		    $("#doctorTable tr:has(td)").filter(function() {
-		      $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-		    });
-		  });
-		});
-		// Redirect when clicking a row
-		jQuery(document).ready(function($) {
-		    $(".clickable-row").click(function() {
-		        window.location = $(this).data("href");
-		    });
-		});
-	</script>
+	<script src="/guardians/js/doctors/doctors.js"></script>
 </body>
 </html>

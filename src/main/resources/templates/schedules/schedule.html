@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous">
+
+<title th:text="#{schedule.title} + ' ' + ${yearMonth}"></title>
+</head>
+<body>
+	<div th:include="navbar.html"></div>
+
+	<div class="container">
+		<div class="container my-2">
+			<span class="h1 my-2" th:text="#{schedule.heading}"></span>
+			<div class="btn-group float-right my-2">
+			    <a class="btn btn-secondary" th:classappend="${useListView} ? '' : 'active'" 
+			    	href="?useListView=false" role="button" th:text="#{calendar}"></a>
+			    <a class="btn btn-secondary" th:classappend="${useListView} ? 'active' : ''" 
+			    	href="?useListView=true" role="button" th:text="#{list}">AAA</a>
+			</div>
+		</div>
+		<div class="container my-2 d-flex">
+			<span class="h2 my-2" th:text="${yearMonth}"></span>
+			<span class="h4 my-2 ml-auto" 
+				th:text="#{'schedules.status.' + ${schedule.status}}"></span>
+		</div>
+		
+		<!-- Show as a table -->
+		<div class="table-responsive-lg mb-4" th:if="${!useListView}">
+		<table class="table table-bordered my-2">
+			<thead>
+				<tr>
+					<th scope="row" th:text="#{Monday}"></th>
+					<th scope="row" th:text="#{Tuesday}"></th>
+					<th scope="row" th:text="#{Wednesday}"></th>
+					<th scope="row" th:text="#{Thursday}"></th>
+					<th scope="row" th:text="#{Friday}"></th>
+					<th scope="row" th:text="#{Saturday}"></th>
+					<th scope="row" th:text="#{Sunday}"></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="week : ${schedule.weeks}">
+					<td class="p-1" th:each="scheduleDay : ${week}">
+						<p class="border-bottom border-right rounded-circle border-primary w-25 mb-2 text-center" 
+							th:text="${scheduleDay.day}"></p>
+						<div class="container p-0" th:if="${scheduleDay.cycle != null}">
+							<div class="col my-2">
+								<p class="border-bottom border-primary mb-1" 
+									th:text="#{schedule.cycle}"></p>
+								<ul class="list-group p-0">
+									<li class="list-group-item p-1 border-0 mb-1" 
+										th:each="doctor : ${scheduleDay.cycle}" 
+										th:text="${doctor.lastNames} + ', ' + ${doctor.firstName}"></li>
+								</ul>
+							</div>
+							<div class="col my-2" th:if="${not #lists.isEmpty(scheduleDay.shifts)}">
+								<p class="border-bottom border-primary mb-1" 
+									th:text="#{schedule.shifts}"></p>
+								<ul class="list-group p-0">
+									<li class="list-group-item p-1 border-0 mb-1" 
+										th:each="doctor : ${scheduleDay.shifts}" 
+										th:text="${doctor.lastNames} + ', ' + ${doctor.firstName}"></li>
+								</ul>
+							</div>
+							<div class="col my-2" th:if="${not #lists.isEmpty(scheduleDay.consultations)}">
+								<p class="border-bottom border-primary mb-1"
+									th:text="#{schedule.consultations}"></p>
+								<ul class="list-group p-0">
+									<li class="list-group-item p-1 border-0 mb-1" 
+										th:each="doctor : ${scheduleDay.consultations}" 
+										th:text="${doctor.lastNames} + ', ' + ${doctor.firstName}"></li>
+								</ul>
+							</div>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		</div>
+		
+		<!-- Show as list -->
+		 <ul class="list-group mb-4" th:unless="${!useListView}">
+		 	<li class="list-group-item" th:each="scheduleDay : ${schedule.days}">
+		 	<div class="row">
+		 		<div class="col">
+		 			<span class="border rounded-circle border-primary p-2 mb-2 text-center" 
+						th:text="${scheduleDay.day}"></span>
+		 		</div>
+		 		<div class="col-11">
+			 		<div class="row">
+						<div class="col my-2">
+							<span class="border-bottom border-primary mb-1" 
+								th:text="#{schedule.cycle}"></span>
+							<ul class="list-group p-0">
+								<li class="list-group-item p-1 border-0 mb-1" 
+									th:each="doctor : ${scheduleDay.cycle}" 
+									th:text="${doctor.lastNames} + ', ' + ${doctor.firstName}"></li>
+							</ul>
+						</div>
+						<div class="col my-2">
+						<div th:if="${not #lists.isEmpty(scheduleDay.shifts)}">
+							<span class="border-bottom border-primary mb-1" 
+								th:text="#{schedule.shifts}"></span>
+							<ul class="list-group p-0">
+								<li class="list-group-item p-1 border-0 mb-1" 
+									th:each="doctor : ${scheduleDay.shifts}" 
+									th:text="${doctor.lastNames} + ', ' + ${doctor.firstName}"></li>
+							</ul>
+						</div>
+						</div>
+						<div class="col my-2">
+						<div th:if="${not #lists.isEmpty(scheduleDay.consultations)}">
+							<span class="border-bottom border-primary mb-1"
+								th:text="#{schedule.consultations}"></span>
+							<ul class="list-group p-0">
+								<li class="list-group-item p-1 border-0 mb-1" 
+									th:each="doctor : ${scheduleDay.consultations}" 
+									th:text="${doctor.lastNames} + ', ' + ${doctor.firstName}"></li>
+							</ul>
+						</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		 	</li>
+		 </ul>
+	</div>
+
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+		integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+		crossorigin="anonymous"></script>
+</body>
+</html>

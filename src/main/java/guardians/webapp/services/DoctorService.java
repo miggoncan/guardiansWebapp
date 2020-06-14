@@ -1,23 +1,18 @@
 package guardians.webapp.services;
 
-import java.net.HttpCookie;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Links;
 import org.springframework.hateoas.client.Hop;
-import org.springframework.hateoas.client.Traverson;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,80 +34,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-public class DoctorService {
-	@Autowired
-	private Traverson traverson;
-	@Autowired
-	private RestTemplateBuilder restTemplateBuilder;
+public class DoctorService extends MyService {
 	
-	@Value("${api.uri}")
-	private String restUri;
-	
-	@Value("${api.links.doctors}")
-	private String doctorsLink;
-	@Value("${api.links.doctor}")
-	private String doctorLink;
-	@Value("${api.links.newDoctor}")
-	private String newDoctorLink;
-	@Value("${api.links.shiftconfs}")
-	private String shiftConfsLink;
-	@Value("${api.links.shiftconf}")
-	private String shiftConfLink;
-	
-	private HttpHeaders getSessionHeaders() {
-		log.info("Request to get session headers");
-		HttpHeaders headers = new HttpHeaders();
-		ResponseEntity<Object> resp = restTemplateBuilder.build()
-				.getForEntity(restUri, Object.class);
-		log.debug("The response is: " + resp);
-		List<String> cookiesStr = resp.getHeaders().get(HttpHeaders.SET_COOKIE);
-		log.debug("The list of cookies as Strings is: " + cookiesStr);
-		if (cookiesStr != null && !cookiesStr.isEmpty()) {
-			List<HttpCookie> cookies = new ArrayList<>();
-			// Parse the list of cookiesStr and add them to the cookies list
-			cookiesStr.stream().map((c) -> HttpCookie.parse(c)).forEachOrdered((cook) -> {
-                cook.forEach((a) -> {
-                    HttpCookie cookieExists = cookies.stream().filter(x -> a.getName().equals(x.getName())).findAny().orElse(null);
-                    if (cookieExists != null) {
-                        cookies.remove(cookieExists);
-                    }
-                    cookies.add(a);
-                });
-            });
-			log.debug("The extracted cookies are: " + cookies);
-			StringBuilder sb = new StringBuilder();
-            for (HttpCookie cookie : cookies) {
-                sb.append(cookie.toString()).append(";");
-            }
-            String mappedCookies = sb.toString();
-            log.debug("The cookies to be added are: " + mappedCookies);
-            headers.add(HttpHeaders.COOKIE, mappedCookies);
-		} else {
-			log.debug("No cookies to set found on the response");
-		}
-		log.info("The created headers are: " + headers);
-		return headers;
-	}
-	
-	/**
-	 * Get a required {@link Link} from the root resource.
-	 * 
-	 * Note a link is considered required if it will always be present in the
-	 * response.
-	 * 
-	 * @param rel The relation of the required link
-	 * @return The link found
-	 */
-	private Link getRootRequiredLink(String rel) {
-		log.info("Request to get root required link with rel: " + rel);
-		EntityModel<?> rootResource = restTemplateBuilder.build()
-				.getForObject(restUri, EntityModel.class);
-		log.debug("The root resource is: " + rootResource);
-		Link link = rootResource.getRequiredLink(rel);
-		log.info("The found link is: " + link);
-		return link;
-	}
-
 	/**
 	 * @return All the {@link Doctor} resources available at the REST service
 	 */
@@ -125,6 +48,21 @@ public class DoctorService {
 				.toObject(doctorTypeReference);
 		log.info("The received resources are: " + doctorResources);
 		return doctorResources;
+	}
+	
+	/**
+	 * @return Only the {@link Doctor} resources not DELETED
+	 */
+	public CollectionModel<EntityModel<Doctor>> getAvailableDoctors() {
+		log.info("Request to get all available doctor resources");
+		CollectionModel<EntityModel<Doctor>> doctorResources = this.getDoctors();
+		List<EntityModel<Doctor>> availableDoctorResources = doctorResources.getContent()
+			.stream()
+			.filter(doctorResource -> doctorResource.hasLink(updateDoctorLink))
+			.collect(Collectors.toList());
+		Links links = doctorResources.getLinks();
+		log.info("The available doctors are: " + availableDoctorResources);
+		return CollectionModel.of(availableDoctorResources, links);
 	}
 
 	/**

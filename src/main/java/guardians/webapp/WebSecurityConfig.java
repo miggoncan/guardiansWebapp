@@ -17,6 +17,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Value("${auth.user.password}")
 	private String password;
 	
+//	@Value("#{url.login}")
+	// TODO this values should be injected
+	private String loginURL = "/guardians/login";
+//	@Value("#{url.logout = /guardians/logout}")
+	private String logoutURL = "/guardians/logout";
+//	@Value("#{url.home}")
+	private String homeURL = "/guardians/";
+	
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 		PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
@@ -29,7 +37,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
+		// TODO allow CSRF
+		http.csrf().disable();
 		http
+			.formLogin()
+				.loginProcessingUrl(loginURL)
+				.defaultSuccessUrl(homeURL)
+				.and()
+			.logout()
+				.logoutUrl(logoutURL)
+				.logoutSuccessUrl(loginURL)
+				.invalidateHttpSession(true)
+				.and()
 			.authorizeRequests()
 				.anyRequest().authenticated()
 				.and()

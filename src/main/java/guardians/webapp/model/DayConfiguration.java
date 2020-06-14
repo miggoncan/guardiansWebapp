@@ -18,6 +18,7 @@ public class DayConfiguration implements Comparable<DayConfiguration> {
 	private Integer day;
 	private Boolean isWorkingDay;
 	private Integer numShifts;
+	private Integer numConsultations;
 	private Set<Doctor> unwantedShifts;
 	private Set<Doctor> wantedShifts;
 

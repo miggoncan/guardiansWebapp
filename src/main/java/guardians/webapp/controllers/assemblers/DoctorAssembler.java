@@ -52,11 +52,16 @@ public class DoctorAssembler {
 				log.debug("Parsing self relation");
 				Method methodToSelf = null;
 				try {
+					// The methods can not be acquired through the convenient methodOn() 
+					// static method on WebMvcLinkBuilder because methodOn proxies the returned 
+					// value. However, the String class is defined as final, so it cannot be 
+					// extended (so it cannot be proxied)
 					methodToSelf = DoctorsController.class.getMethod("getDoctor", Long.class, Model.class);
 				} catch (NoSuchMethodException e) {
 					log.error("The method DoctorsController.getDoctor(Long, Model) does not exist");
 				}
 				Link linkToSelf = linkTo(methodToSelf, doctor.getId()).withSelfRel();
+				log.debug("The link to self is: " + linkToSelf);
 				links.put("self", linkToSelf.getHref());
 			} else if (rel.equals(updateDoctorLink)) {
 				log.debug("Parsing updateDoctor relation");
@@ -67,6 +72,7 @@ public class DoctorAssembler {
 					log.error("The method DoctorsController.putDoctor(Doctor, Model) does not exist");
 				}
 				Link linkToUpdate = linkTo(methodToUpdate, doctor.getId()).withSelfRel();
+				log.debug("The link to update is: " + linkToUpdate);
 				links.put(updateDoctorLink, linkToUpdate.getHref());
 			} else if (rel.equals(doctorsLink)) {
 				log.debug("Parsing doctors relation: Pass");

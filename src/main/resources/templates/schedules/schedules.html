@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker.standalone.min.css" rel="stylesheet"/>
+<title th:text="#{schedules.title}"></title>
+</head>
+<body>
+	<div th:include="navbar.html"></div>
+
+	<div class="container col-lg-10">
+		<div class="container my-2">
+			<span class="h2 my-2" th:text="#{schedules.heading}"></span>
+			<button class="btn btn-primary my-2 float-right" th:text="#{schedules.new}"
+				 data-toggle="modal" data-target="#newScheduleModal"></button>
+		</div>
+		
+		<input class="form-control my-2" id="searchScheduleBar" type="text"
+			th:placeholder="#{search}">
+			
+		<table class="table table-hover my-2" id="scheduleTable">
+			<tr>
+				<th scope="row" th:text="#{schedules.month}"></th>
+				<th scope="row" th:text="#{schedules.year}"></th>
+				<th scope="row" th:text="#{schedules.status}"></th>
+			</tr>
+			<tr th:each="schedule : ${schedules}" scope="row" 
+				class="clickable-row" style="cursor: pointer" th:data-href="${schedule.links['self']}">
+				<td th:text="${schedule.month}"></td>
+				<td th:text="${schedule.year}"></td>
+				<td th:text="#{'schedules.status.' + ${schedule.status}}"></td>
+			</tr>
+		</table>
+	</div>
+	
+	<div class="modal fade" id="newScheduleModal" tabindex="-1" role="dialog" aria-labelledby="newScheduleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="newScheduleModalLabel"th:text="#{schedules.new}"></h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	        <form th:action="#{url.new-schedule}" method="get" id="newScheduleForm">
+	        	<div class="form-group">
+					<label for="yearMonth" th:text="#{schedules.yearMonth}"></label>
+					<input type="text" class="form-control w-50" id="yearMonth" name="yearMonth" 
+						required="true"	th:placeholder="#{schedules.yearMonthFormat}" >
+					<div class="datepicker my-2" id="yearMonthPicker" th:data-language="${#locale}" 
+					data-format="yyyy-mm-dd"></div>
+				</div>
+	        </form>
+	      </div>
+	      <div class="modal-footer">
+	      	<button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{cancel}"></button>
+	        <button type="submit" form="newScheduleForm" id="submitBtn" class="btn btn-primary" th:text="#{continue}"></button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+		integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.min.js"></script>
+	<script src="/guardians/js/schedules/schedules.js"></script>
+</body>
+</html>
