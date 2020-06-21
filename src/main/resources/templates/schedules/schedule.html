@@ -142,9 +142,11 @@
 		 
 		 <!-- Bottom section with buttons -->
 		 <div class="container">
-		 	<a class="btn btn-success float-right m-2" role="button" th:text="#{confirm}"
-		 		th:if="${#maps.containsKey(schedule.links, 'confirm')}" 
-		 		th:href="${schedule.links['confirm']}"></a>
+		 	<form id="confirmForm" th:action="${schedule.links['confirm']}" method="POST" 
+		 		th:if="${#maps.containsKey(schedule.links, 'confirm')}">
+		 			<p class="d-none" id="confirmMessage" th:text="#{schedule.confirmMessage}"></p>
+		 			<button class="btn btn-success float-right m-2" type="submit" th:text="#{confirm}"></button>
+	 		</form>
 	 		<a class="btn btn-primary float-right m-2" role="button" th:text="#{schedule.uploadEditedExcel}"
 	 			th:if="${#maps.containsKey(schedule.links, 'confirm')}" 
 		 		th:href="${schedule.links['scheduleDownload']}"></a>
@@ -165,5 +167,6 @@
 		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
 		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
 		crossorigin="anonymous"></script>
+	<script src="/guardians/js/schedules/schedule.js"></script>
 </body>
 </html>

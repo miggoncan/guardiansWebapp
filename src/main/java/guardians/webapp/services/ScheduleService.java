@@ -4,7 +4,9 @@ import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -32,6 +34,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class ScheduleService extends MyService {
+	@Value("${api.links.confirmSchedule}")
+	private String confirmScheduleLink;
+	
 	/**
 	 * This method will return a summary of all existent {@link Calendar}s in the
 	 * REST service. A summarized {@link Calendar} contains the month, year and
@@ -152,5 +157,20 @@ public class ScheduleService extends MyService {
 		}
 
 		return schedule;
+	}
+
+	public void confirmSchedule(YearMonth yearMonth) {
+		log.info("Request to confirm schedule: " + yearMonth);
+		EntityModel<Schedule> schedule = this.getSchedule(yearMonth);
+		Optional<Link> linkToConfirmSchedule = schedule.getLink(confirmScheduleLink);
+		if (!linkToConfirmSchedule.isPresent()) {
+			log.warn("Trying to confirm a schedule that cannot be confirmed: " + yearMonth);
+		} else {
+			HttpEntity<Calendar> req = new HttpEntity<>(getSessionHeaders());
+			RestTemplate restTemplate = restTemplateBuilder.build();
+			log.info("Attempting to confirm the schedule");
+			restTemplate.exchange(linkToConfirmSchedule.get().toUri(), HttpMethod.PUT, req, Object.class);
+			log.info("If it existed, the schedule has been confirmed");
+		}
 	}
 }

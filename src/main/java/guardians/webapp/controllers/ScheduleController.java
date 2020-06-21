@@ -191,8 +191,8 @@ public class ScheduleController {
 	@PostMapping("/{yearMonth}/confirm")
 	public String confirmSchedule(@PathVariable YearMonth yearMonth, Model model) {
 		log.info("Request to confirm schedule: " + yearMonth);
-		// TODO confirm schedule
-		return null;
+		scheduleService.confirmSchedule(yearMonth);
+		return getSchedule(yearMonth, false, model);
 	}
 	
 	@GetMapping(value = "/{yearMonth}/download-as-excel", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
