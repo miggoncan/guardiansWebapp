@@ -3,6 +3,7 @@ package guardians.webapp.controllers;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -84,8 +85,11 @@ public class ScheduleController {
 	public String getSchedulesSummary(Model model) {
 		log.info("Request to get the schedule summaries");
 		CollectionModel<EntityModel<Schedule>> scheduleEntities = scheduleService.getSchedules();
-		// TODO sort by date
-		model.addAttribute(SCHEDULES_ATTR, scheduleAssembler.toList(scheduleEntities));
+		List<Schedule> schedules = scheduleAssembler.toList(scheduleEntities);
+		schedules.sort(Comparator.comparing(Schedule::getYear)
+						.thenComparing(Schedule::getMonth)
+						.reversed());
+		model.addAttribute(SCHEDULES_ATTR, schedules);
 		return "schedules/schedules";
 	}
 	

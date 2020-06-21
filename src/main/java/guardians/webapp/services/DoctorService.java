@@ -131,13 +131,13 @@ public class DoctorService extends MyService {
 			// This map will contain the startDate parameter to create the link
 			Map<String, LocalDate> params = new HashMap<>();
 			params.put("startDate", startDate);
-			linkToSaveDoctor = this.getRootRequiredLink(newDoctorLink).expand(params);
+			linkToSaveDoctor = this.getRootRequiredLinks(newDoctorLink).get(0).expand(params);
 			methodToSaveDoctor = HttpMethod.POST;
 		} else {
 			// This map will contain the doctorId parameter to create the link
 			Map<String, Long> params = new HashMap<>();
 			params.put("doctorId", doctor.getId());
-			linkToSaveDoctor = this.getRootRequiredLink(doctorLink).expand(params);
+			linkToSaveDoctor = this.getRootRequiredLinks(doctorLink).get(0).expand(params);
 			methodToSaveDoctor = HttpMethod.PUT;
 		}
 		log.debug("The link to create a doctor is: " + linkToSaveDoctor);
@@ -167,14 +167,16 @@ public class DoctorService extends MyService {
 	 */
 	public void saveShiftConfiguration(ShiftConfiguration shiftConf) {
 		log.info("Request to persist the shift configuration " + shiftConf);
+		
+		// Request all the links we may need
+		List<Link> links = this.getRootRequiredLinks(shiftConfLink, shiftConfsLink);
 
 		// First, we will try to PUT the shift configuration. If it does not already
 		// exist, we will then POST it
 		Map<String, Long> params = new HashMap<>();
 		params.put("doctorId", shiftConf.getDoctorId());
-		Link linkToPersistShiftConf = this.getRootRequiredLink(shiftConfLink).expand(params);
+		Link linkToPersistShiftConf = links.get(0).expand(params);
 		log.debug("The link to PUT the shift configuration is: " + linkToPersistShiftConf);
-
 		RestTemplate restTemplate = restTemplateBuilder.build();
 		HttpEntity<ShiftConfiguration> req = new HttpEntity<ShiftConfiguration>(shiftConf, this.getSessionHeaders());
 		ResponseEntity<ShiftConfiguration> respShiftConf = null;
@@ -185,7 +187,7 @@ public class DoctorService extends MyService {
 			log.debug("The persisted shift configuration is:  " + respShiftConf.getBody());
 		} catch (NotFound e) {
 			log.info("The shift configuration does not already exist. Attempting to create it");
-			linkToPersistShiftConf = this.getRootRequiredLink(shiftConfsLink);
+			linkToPersistShiftConf = links.get(1);
 			log.debug("The link to POST the shift configuration is: " + linkToPersistShiftConf);
 			try {
 				respShiftConf = restTemplate.postForEntity(linkToPersistShiftConf.toUri(), req,
@@ -193,10 +195,10 @@ public class DoctorService extends MyService {
 				log.debug("The response shift configuration is: " + respShiftConf);
 				log.debug("The persisted shift configuration is:  " + respShiftConf.getBody());
 			} catch (RestClientException e1) {
-				log.error("Unexpected exception occured: " + e1);
+				log.error("Unexpected exception occurred: " + e1);
 			}
 		} catch (RestClientException e) {
-			log.error("Unexpected exception occured: " + e);
+			log.error("Unexpected exception occurred: " + e);
 		}
 	}
 }

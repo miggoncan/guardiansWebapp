@@ -17,6 +17,7 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
@@ -86,6 +87,8 @@ public class DoctorsController {
 		log.info("Request received get doctors");
 		CollectionModel<EntityModel<Doctor>> doctorResources = doctorService.getDoctors();
 		List<Doctor> doctors = this.doctorAssembler.toList(doctorResources);
+		doctors.sort(Comparator.comparing(Doctor::getLastNames)
+						.thenComparing(Doctor::getFirstName));
 		model.addAttribute(DOCTORS_ATTR, doctors);
 		return "doctors/doctors";
 	}
@@ -137,9 +140,7 @@ public class DoctorsController {
 	@PostMapping(value = "", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public String postDoctor(@RequestBody MultiValueMap<String, String> formData, Model model) {
 		log.info("Request received: edit doctor with data: " + formData);
-		// Note the received attributes might not be the full list of attributes in the
-		// form. In case some of them is missing, it means the user did not change its
-		// value
+		// The check boxes parameters are only sent if they are checked
 		Doctor doctor = new Doctor();
 		ShiftConfiguration shiftConf = null;
 		LocalDate startDate = null;
@@ -158,8 +159,8 @@ public class DoctorsController {
 					shiftConf = shiftConfEntity.getContent();
 				}
 			} else {
-				log.debug("The doctor doesn't already exist. Creating the default shift configuration");
-				shiftConf = getDefaultShiftConfig();
+				log.debug("The doctor doesn't already exist. Creating an empty shift configuration");
+				shiftConf = new ShiftConfiguration();
 				startDate = LocalDate.parse(formData.getFirst("startDate"));
 				log.debug("The start date is: " + startDate);
 			}
@@ -173,94 +174,56 @@ public class DoctorsController {
 			log.debug("The email of the doctor is: " + doctor.getEmail());
 
 			// Cycle shifts configuration
-			String doesCycleShiftsString = formData.getFirst("doesCycleShifts");
-			if (doesCycleShiftsString != null && !"".equals(doesCycleShiftsString)) {
-				shiftConf.setDoesCycleShifts("on".equals(doesCycleShiftsString));
-				log.debug("The doctor does cycle shifts: " + shiftConf.getDoesCycleShifts());
-			} else {
-				log.debug("Does cycle shifts was not provided. Using default: " + shiftConf.getDoesCycleShifts());
-			}
+			boolean doesCycleShifts = this.isChecked(formData.getFirst("doesCycleShifts"));
+			log.debug("The doctor does cycle shifts: " + doesCycleShifts);
+			shiftConf.setDoesCycleShifts(doesCycleShifts);
 
 			// Shifts configuration
-			String doesShiftsString = formData.getFirst("doesShifts");
-			if (doesShiftsString == null || "".equals(doesShiftsString)) {
-				log.debug("Does shifts was not provided. Using defaults: minShifts=" + shiftConf.getMinShifts()
-						+ ", maxShifts=" + shiftConf.getMaxShifts() + ", hasShiftsOnlyWhenCycleShifts="
-						+ shiftConf.getHasShiftsOnlyWhenCycleShifts());
+			boolean doesShifts = this.isChecked(formData.getFirst("doesShifts"));
+			log.debug("The doctor does shifts: " + doesShifts);
+			boolean hasShiftsOnlyWhenCycleShifts = this.isChecked(formData.getFirst("hasShiftsOnlyWhenCycleShifts"));
+			log.debug("The doctor has shifts only when cycle shifts: " + hasShiftsOnlyWhenCycleShifts);
+			shiftConf.setHasShiftsOnlyWhenCycleShifts(doesShifts && hasShiftsOnlyWhenCycleShifts);
+			log.debug("ShiftConfiguration.hasShiftOnlyWhenCycleShifts is: " + shiftConf.getHasShiftsOnlyWhenCycleShifts());
+			if (doesShifts && !hasShiftsOnlyWhenCycleShifts) {
+				log.debug("The doctor does shifts. Trying to parse minShifts and maxShifts");
+				shiftConf.setMinShifts(Integer.parseInt(formData.getFirst("minShifts")));
+				log.debug("Min shifts is " + shiftConf.getMinShifts());
+				shiftConf.setMaxShifts(Integer.parseInt(formData.getFirst("maxShifts")));
+				log.debug("Max shifts is " + shiftConf.getMaxShifts());
 			} else {
-				boolean doesShifts = "on".equals(doesShiftsString);
-				log.debug("The doctor does shifts: " + doesShifts);
-				String hasShiftsOnlyWhenCycleShiftsString = formData.getFirst("hasShiftsOnlyWhenCycleShifts");
-				boolean hasShiftsOnlyWhenCycleShifts = hasShiftsOnlyWhenCycleShiftsString != null
-						&& !"".equals(hasShiftsOnlyWhenCycleShiftsString)
-								? "on".equals(hasShiftsOnlyWhenCycleShiftsString)
-								: shiftConf.getHasShiftsOnlyWhenCycleShifts();
-				log.debug("The doctor has shifts only when cycle shifts: " + hasShiftsOnlyWhenCycleShifts);
-				if (!doesShifts) {
-					log.debug("The doctor does not do shifts. Setting minShift and maxShifts to 0 "
-							+ "and hasShiftsOnlyWhenCycleShifts to false");
-					shiftConf.setHasShiftsOnlyWhenCycleShifts(false);
-					shiftConf.setMinShifts(0);
-					shiftConf.setMaxShifts(0);
-				} else if (hasShiftsOnlyWhenCycleShifts) {
-					log.debug("The doctor does shifts only when cycle shifts. Setting minShift and "
-							+ "maxShifts to 0 and hasShiftsOnlyWhenCycleShifts to true");
-					shiftConf.setHasShiftsOnlyWhenCycleShifts(true);
-					shiftConf.setMinShifts(0);
-					shiftConf.setMaxShifts(0);
-				} else {
-					log.debug("The doctor does a certain number of shifts. Setting "
-							+ "hasShiftsOnlyWhenCycleShifts to false");
-					shiftConf.setHasShiftsOnlyWhenCycleShifts(false);
-					log.debug("Trying to parse minShifts and maxShifts");
-					shiftConf.setMinShifts(Integer.parseInt(formData.getFirst("minShifts")));
-					log.debug("Min shifts is " + shiftConf.getMinShifts());
-					shiftConf.setMaxShifts(Integer.parseInt(formData.getFirst("maxShifts")));
-					log.debug("Max shifts is " + shiftConf.getMaxShifts());
-				}
+				log.debug("Setting min and max shift to 0");
+				shiftConf.setMinShifts(0);
+				shiftConf.setMaxShifts(0);
 			}
 
 			// Consultations configuration
-			String doesConsultationsString = formData.getFirst("doesConsultations");
-			if (doesConsultationsString == null || "".equals(doesConsultationsString)) {
-				log.debug("doesConsultations was not provided. Using default: " + shiftConf.getNumConsultations());
+			boolean doesConsultations = this.isChecked(formData.getFirst("doesConsultations"));
+			if (!doesConsultations) {
+				log.debug("The doctor does not do consultations");
+				shiftConf.setNumConsultations(0);
 			} else {
-				if (!"on".equals(doesConsultationsString)) {
-					log.debug("The doctor does not do consultations");
-					shiftConf.setNumConsultations(0);
-				} else {
-					log.debug("The doctor does consultations");
-					shiftConf.setNumConsultations(Integer.parseInt(formData.getFirst("numConsultations")));
-					log.debug("The doctor should have " + shiftConf.getNumConsultations() + " consultations");
-				}
+				log.debug("The doctor does consultations");
+				shiftConf.setNumConsultations(Integer.parseInt(formData.getFirst("numConsultations")));
+				log.debug("The doctor should have " + shiftConf.getNumConsultations() + " consultations");
 			}
 
 			// Shift preferences
 			CollectionModel<EntityModel<AllowedShift>> allowedShifts = allowedShiftService.getAllowedShifts();
+			// allowedShiftMap will allow to easily map between a shift id and an AllowedShift
 			Map<Integer, AllowedShift> allowedShiftMap = allowedShifts.getContent().stream()
 					.map(allowedShiftEntity -> allowedShiftEntity.getContent())
 					.collect(Collectors.toMap(AllowedShift::getId, allowedShift -> allowedShift));
+			// Start checking shift preferences
 			List<String> wantedShiftsStrings = formData.get("wantedShifts");
-			if (wantedShiftsStrings == null) {
-				log.debug("wantedShifts was not provided. Using default: " + shiftConf.getWantedShifts());
-			} else {
-				shiftConf.setWantedShifts(mapShiftPreferences(wantedShiftsStrings, allowedShiftMap));
-				log.debug("The wanted shifts are: " + shiftConf.getWantedShifts());
-			}
+			shiftConf.setWantedShifts(mapShiftPreferences(wantedShiftsStrings, allowedShiftMap));
+			log.debug("The wanted shifts are: " + shiftConf.getWantedShifts());
 			List<String> unwantedShiftsStrings = formData.get("unwantedShifts");
-			if (unwantedShiftsStrings == null) {
-				log.debug("unwantedShifts was not provided. Using default: " + shiftConf.getUnwantedShifts());
-			} else {
-				shiftConf.setUnwantedShifts(mapShiftPreferences(unwantedShiftsStrings, allowedShiftMap));
-				log.debug("The unwanted shifts are: " + shiftConf.getUnwantedShifts());
-			}
+			shiftConf.setUnwantedShifts(mapShiftPreferences(unwantedShiftsStrings, allowedShiftMap));
+			log.debug("The unwanted shifts are: " + shiftConf.getUnwantedShifts());
 			List<String> wantedConsultationsStrings = formData.get("wantedConsultations");
-			if (wantedConsultationsStrings == null) {
-				log.debug("wantedConsultations was not provided. Using default: " + shiftConf.getWantedConsultations());
-			} else {
-				shiftConf.setWantedConsultations(mapShiftPreferences(wantedConsultationsStrings, allowedShiftMap));
-				log.debug("The wanted consultations are: " + shiftConf.getWantedConsultations());
-			}
+			shiftConf.setWantedConsultations(mapShiftPreferences(wantedConsultationsStrings, allowedShiftMap));
+			log.debug("The wanted consultations are: " + shiftConf.getWantedConsultations());
 
 			log.debug("The resulting doctor is: " + doctor);
 			log.debug("The resulting shift configuration is: " + shiftConf);
@@ -278,19 +241,44 @@ public class DoctorsController {
 
 		return getDoctor(doctor.getId(), model);
 	}
+	
+	/**
+	 * @param checkBoxStr The String value from the MultiValueMap corresponding to
+	 *                    the check box field.
+	 * @return true if the check box has been checked.
+	 */
+	private boolean isChecked(@Nullable String checkBoxStr) {
+		log.debug("Request to verify is " + checkBoxStr + " is checked");
+		boolean isChecked = checkBoxStr != null && !"".equals(checkBoxStr)
+				? "on".equals(checkBoxStr) 
+				: false;
+		log.debug("Is checked: " + isChecked);
+		return isChecked;
+	}
 
 	/**
 	 * This method converts a list of allowed shifts ids into a set of
 	 * {@link AllowedShift}s
 	 * 
-	 * @param shiftIds        The list of ids
+	 * @param shiftIds        The list of ids. If it is null, the return set will be
+	 *                        empty
 	 * @param allowedShiftMap Used to map from an allowed shift id to an
 	 *                        {@link AllowedShift}
 	 * @return The mapped set of {@link AllowedShift}s
 	 */
-	private SortedSet<AllowedShift> mapShiftPreferences(List<String> shiftIds, Map<Integer, AllowedShift> allowedShiftMap) {
-		return shiftIds.stream().map(idStr -> allowedShiftMap.get(Integer.parseInt(idStr)))
+	private SortedSet<AllowedShift> mapShiftPreferences(@Nullable List<String> shiftIds, 
+			Map<Integer, AllowedShift> allowedShiftMap) {
+		log.debug("Request to map shift preferences: " + shiftIds);
+		log.debug("The map of allowed shifts is: " + allowedShiftMap);
+		if (shiftIds == null) {
+			log.debug("shiftsIds is null. Returning an empty set.");
+			return new TreeSet<>();
+		}
+		SortedSet<AllowedShift> shiftPreferences = shiftIds.stream()
+				.map(idStr -> allowedShiftMap.get(Integer.parseInt(idStr)))
 				.collect(Collectors.toCollection(() -> new TreeSet<>()));
+		log.debug("The checked shift preferences are: " + shiftPreferences);
+		return shiftPreferences;
 	}
 
 	/**
