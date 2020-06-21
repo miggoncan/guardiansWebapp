@@ -99,12 +99,17 @@ public class ScheduleService extends MyService {
 
 		HttpHeaders headers = getSessionHeaders();
 
-		// TODO First try to delete the schedule. This allows regenerating a schedule if
+		HttpEntity<Calendar> req = new HttpEntity<>(headers);
+		// First try to delete the schedule. This allows regenerating a schedule if
 		// it has not already been confirmed
+		// TODO this may throw a Forbidden exception if the schedule is confirmed
+		log.info("Attempting to delete the schedule if it already exists");
+		restTemplate.exchange(linkToSchedule.toUri(), HttpMethod.DELETE, req, Object.class);
+		log.info("If it existed, the schedule has been deleted");
 
 		// First, we will try to POST the calendar. If it fails, we will try to PUT it
 		boolean calendarPersistedCorrectly = false;
-		HttpEntity<Calendar> req = new HttpEntity<Calendar>(calendar, headers);
+		req = new HttpEntity<Calendar>(calendar, headers);
 		ResponseEntity<Calendar> resp = null;
 		try {
 			log.info("Attemting to POST calendar");
