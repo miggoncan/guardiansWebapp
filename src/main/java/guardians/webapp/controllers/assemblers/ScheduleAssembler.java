@@ -36,6 +36,11 @@ public class ScheduleAssembler {
 	private String scheduleStatusLink;
 	@Value("${api.links.confirmSchedule}")
 	private String confirmScheduleLink;
+	
+	@Value("${guardians.link.downloadSchedule}")
+	private String downloadScheduleLink;
+	@Value("${guardians.default.useXlsx}")
+	private Boolean defaultUseXlsx;
 
 	/**
 	 * This method will convert the links contained in the {@link EntityModel}
@@ -90,6 +95,12 @@ public class ScheduleAssembler {
 				log.warn("Unknown relation while parsing schedule's links: " + link.getRel().value());
 			}
 		}
+		// Link to download the schedule
+		// To allow the client to decide whether xlsx is used or not, change defaultUseXlsx with null.
+		// Then, the generated URI will have a parameter as 'useXlsx={useXlsx}' where the client will have to
+		// change '{useXlsx}' for either 'true' or 'false'
+		Link linktToDownload = linkTo(methodOn(ScheduleController.class).downloadExcelFor(yearMonth, defaultUseXlsx)).withSelfRel();
+		links.put(downloadScheduleLink, linktToDownload.getHref());
 		log.info("The created links are: " + links);
 		schedule.setLinks(links);
 

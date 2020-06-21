@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +33,7 @@ import guardians.webapp.model.DayConfiguration;
 import guardians.webapp.model.Doctor;
 import guardians.webapp.model.Schedule;
 import guardians.webapp.services.DoctorService;
+import guardians.webapp.services.Schedule2ExcelService;
 import guardians.webapp.services.ScheduleService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,6 +53,9 @@ public class ScheduleController {
 	private DoctorService doctorService;
 	
 	@Autowired
+	private Schedule2ExcelService schedule2ExcelService; 
+	
+	@Autowired
 	private ScheduleAssembler scheduleAssembler;
 	@Autowired
 	private DoctorAssembler doctorAssembler;
@@ -58,6 +64,9 @@ public class ScheduleController {
 	private Integer defaultMinShiftsPerDay;
 	@Value("${guardians.default.minConsultationsPerDay}")
 	private Integer defaultMinConsultationsPerDay;
+	
+	@Value("${guardians.default.useXlsx}")
+	private Boolean defaultUseXlsx;
 	
 	private static final String YEAR_MONTH_ATTR = "yearMonth";
 	private static final String START_DATE_ATTR = "startDate";
@@ -93,7 +102,7 @@ public class ScheduleController {
 		return "schedules/schedules";
 	}
 	
-	@GetMapping("{yearMonth}")
+	@GetMapping("/{yearMonth}")
 	public String getSchedule(@PathVariable YearMonth yearMonth, 
 			@RequestParam(defaultValue = "false") Boolean useListView, Model model) {
 		log.info("Request to get schedule: " + yearMonth);
@@ -184,5 +193,40 @@ public class ScheduleController {
 		log.info("Request to confirm schedule: " + yearMonth);
 		// TODO confirm schedule
 		return null;
+	}
+	
+	@GetMapping(value = "/{yearMonth}/download-as-excel", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	public ResponseEntity<byte[]> downloadExcelFor(@PathVariable YearMonth yearMonth, @RequestParam(required = false) Boolean useXlsx) {
+		log.info("Request to get the excel for the schedule of " + yearMonth);
+		if (useXlsx == null) {
+			log.info("The filetype to be created was not specified. Using Xlsx: " + defaultUseXlsx);
+			useXlsx = defaultUseXlsx;
+		} else {
+			log.info("The requested filetype is xlsx: " + useXlsx);
+		}
+		
+		ResponseEntity<byte[]> resp = null;
+		boolean scheduleFound = false;
+		EntityModel<Schedule> scheduleEntity = scheduleService.getSchedule(yearMonth);
+		if (scheduleEntity != null) {
+			Schedule schedule = scheduleEntity.getContent();
+			if (schedule != null) {
+				scheduleFound = true;
+				log.debug("Requesting conversion to excel");
+				byte [] excelBytes = schedule2ExcelService.toExcel(schedule, useXlsx).toByteArray();
+				String fileName = yearMonth.toString();
+				fileName += useXlsx ? ".xlsx" : ".xls";
+				log.debug("The filename of the file sent is: " + fileName);
+				resp = ResponseEntity.ok()
+						.header("Content-Disposition", "attachment; filename=\"" + fileName + "\"")
+						.body(excelBytes);
+			}
+		}
+		
+		if (!scheduleFound) {
+			resp = ResponseEntity.notFound().build();
+		}
+		
+		return resp;
 	}
 }

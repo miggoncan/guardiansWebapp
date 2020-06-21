@@ -139,6 +139,18 @@
 			</div>
 		 	</li>
 		 </ul>
+		 
+		 <!-- Bottom section with buttons -->
+		 <div class="container">
+		 	<a class="btn btn-success float-right m-2" role="button" th:text="#{confirm}"
+		 		th:if="${#maps.containsKey(schedule.links, 'confirm')}" 
+		 		th:href="${schedule.links['confirm']}"></a>
+	 		<a class="btn btn-primary float-right m-2" role="button" th:text="#{schedule.uploadEditedExcel}"
+	 			th:if="${#maps.containsKey(schedule.links, 'confirm')}" 
+		 		th:href="${schedule.links['scheduleDownload']}"></a>
+		 	<a class="btn btn-info float-right m-2" role="button" th:text="#{schedule.downloadAsExcel}" 
+		 		th:href="${schedule.links['scheduleDownload']}"></a>
+		 </div>
 	</div>
 
 	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
