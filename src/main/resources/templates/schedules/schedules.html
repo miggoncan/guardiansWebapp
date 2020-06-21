@@ -28,17 +28,21 @@
 			th:placeholder="#{search}">
 			
 		<table class="table table-hover my-2" id="scheduleTable">
-			<tr>
-				<th scope="row" th:text="#{schedules.month}"></th>
-				<th scope="row" th:text="#{schedules.year}"></th>
-				<th scope="row" th:text="#{schedules.status}"></th>
-			</tr>
-			<tr th:each="schedule : ${schedules}" scope="row" 
-				class="clickable-row" style="cursor: pointer" th:data-href="${schedule.links['self']}">
-				<td th:text="${schedule.month}"></td>
-				<td th:text="${schedule.year}"></td>
-				<td th:text="#{'schedules.status.' + ${schedule.status}}"></td>
-			</tr>
+			<thead>
+				<tr>
+					<th scope="row" th:text="#{schedules.month}"></th>
+					<th scope="row" th:text="#{schedules.year}"></th>
+					<th scope="row" th:text="#{schedules.status}"></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="schedule : ${schedules}" scope="row" 
+					class="clickable-row" style="cursor: pointer" th:data-href="${schedule.links['self']}">
+					<td th:text="#{'month.' + ${schedule.month}}"></td>
+					<td th:text="${schedule.year}"></td>
+					<td th:text="#{'schedules.status.' + ${schedule.status}}"></td>
+				</tr>
+			</tbody>
 		</table>
 	</div>
 	
