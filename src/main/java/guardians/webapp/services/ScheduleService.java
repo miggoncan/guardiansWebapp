@@ -79,12 +79,12 @@ public class ScheduleService extends MyService {
 	public EntityModel<Schedule> newSchedule(Calendar calendar) {
 		log.info("Request to generate schedule of " + calendar.getYear() + "-" + calendar.getMonth());
 		log.debug("The calendar is: " + calendar);
-		
+
 		YearMonth yearMonth = YearMonth.of(calendar.getYear(), calendar.getMonth());
 		// This map will be used to expand the links to the resources
 		Map<String, Object> paramsSchedule = new HashMap<>();
 		paramsSchedule.put("yearMonth", yearMonth.toString());
-		
+
 		// Get the links required
 		List<Link> links = this.getRootRequiredLinks(scheduleLink, calendarsLink, calendarLink);
 		Link linkToSchedule = links.get(0).expand(paramsSchedule);
@@ -96,10 +96,11 @@ public class ScheduleService extends MyService {
 
 		RestTemplate restTemplate = restTemplateBuilder.build();
 		EntityModel<Schedule> schedule = null;
-		
+
 		HttpHeaders headers = getSessionHeaders();
-		
-		// TODO First try to delete the schedule. This allows regenerating a schedule if it has not already been confirmed
+
+		// TODO First try to delete the schedule. This allows regenerating a schedule if
+		// it has not already been confirmed
 
 		// First, we will try to POST the calendar. If it fails, we will try to PUT it
 		boolean calendarPersistedCorrectly = false;
@@ -136,8 +137,8 @@ public class ScheduleService extends MyService {
 					log.info("Wating for the schedule to generate");
 					Thread.sleep(500);
 					log.info("Trying to request generated schedule");
-					schedule = traverson.follow(Hop.rel(scheduleLink).withParameters(paramsSchedule))
-							.toObject(scheduleTypeReference);
+					schedule = restTemplate.exchange(linkToSchedule.toUri(), HttpMethod.GET, req, scheduleTypeReference)
+							.getBody();
 					log.debug("The received schedule is: " + schedule);
 				} while (schedule.getContent().getStatus().equals("BEING_GENERATED"));
 			} catch (InterruptedException e) {
