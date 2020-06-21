@@ -50,7 +50,10 @@
 			<tbody>
 				<tr th:each="week : ${schedule.weeks}">
 					<td class="p-1" th:each="scheduleDay : ${week}">
-						<p class="border-bottom border-right rounded-circle border-primary w-25 mb-2 text-center" 
+						<p class="border-bottom border-right rounded-circle border-primary w-25 mb-2 
+									text-center font-weight-bold" 
+							th:classappend="${scheduleDay.cycle != null and #lists.isEmpty(scheduleDay.shifts)} 
+											? 'text-danger' : ''"
 							th:text="${scheduleDay.day}"></p>
 						<div class="container p-0" th:if="${scheduleDay.cycle != null}">
 							<div class="col my-2">
@@ -92,7 +95,10 @@
 		 	<li class="list-group-item" th:each="scheduleDay : ${schedule.days}">
 		 	<div class="row">
 		 		<div class="col">
-		 			<span class="border rounded-circle border-primary p-2 mb-2 text-center" 
+		 			<span class="border rounded-circle border-primary p-2 mb-2 
+		 					text-center font-weight-bold"
+	 					th:classappend="${scheduleDay.cycle != null and #lists.isEmpty(scheduleDay.shifts)} 
+										? 'text-danger' : ''"
 						th:text="${scheduleDay.day}"></span>
 		 		</div>
 		 		<div class="col-11">
