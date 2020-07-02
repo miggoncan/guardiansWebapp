@@ -2,6 +2,7 @@ package guardians.webapp.controllers.assemblers;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -99,7 +100,12 @@ public class ScheduleAssembler {
 		// To allow the client to decide whether xlsx is used or not, change defaultUseXlsx with null.
 		// Then, the generated URI will have a parameter as 'useXlsx={useXlsx}' where the client will have to
 		// change '{useXlsx}' for either 'true' or 'false'
-		Link linktToDownload = linkTo(methodOn(ScheduleController.class).downloadExcelFor(yearMonth, defaultUseXlsx)).withSelfRel();
+		Link linktToDownload = null;
+		try {
+			linktToDownload = linkTo(methodOn(ScheduleController.class).downloadExcelFor(yearMonth, defaultUseXlsx)).withSelfRel();
+		} catch (IOException e) {
+			log.error("Unexpected exception while getting link to download schedule: " + e);
+		}
 		links.put(downloadScheduleLink, linktToDownload.getHref());
 		log.info("The created links are: " + links);
 		schedule.setLinks(links);

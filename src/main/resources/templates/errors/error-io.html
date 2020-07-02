@@ -18,8 +18,9 @@
 	<div th:include="navbar.html"></div>
 	
 	<div class="container">
-		<h1 th:text="#{error.heading}"></h1>
-		<h3 th:text="#{error.help}"></h3>
+		<h1 th:text="#{error-io.heading}"></h1>
+		<h3 th:text="#{error-io.message}"></h3>
+		<h4 th:text="#{error.help}"></h4>
 		<a th:href="#{url.home}" role="button" class="btn btn-primary"
 			th:text="#{home}"></a>
 	</div>

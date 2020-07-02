@@ -18,6 +18,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException.BadRequest;
+import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -107,10 +108,14 @@ public class ScheduleService extends MyService {
 		HttpEntity<Calendar> req = new HttpEntity<>(headers);
 		// First try to delete the schedule. This allows regenerating a schedule if
 		// it has not already been confirmed
-		// TODO this may throw a Forbidden exception if the schedule is confirmed
 		log.info("Attempting to delete the schedule if it already exists");
-		restTemplate.exchange(linkToSchedule.toUri(), HttpMethod.DELETE, req, Object.class);
-		log.info("If it existed, the schedule has been deleted");
+		try {
+			// TODO this may throw a Forbidden exception if the schedule is confirmed
+			restTemplate.exchange(linkToSchedule.toUri(), HttpMethod.DELETE, req, Object.class);
+			log.info("The schedule has been deleted");
+		} catch (NotFound e) {
+			log.info("The schedule did not exist");
+		}
 
 		// First, we will try to POST the calendar. If it fails, we will try to PUT it
 		boolean calendarPersistedCorrectly = false;
@@ -136,7 +141,6 @@ public class ScheduleService extends MyService {
 		if (calendarPersistedCorrectly) {
 			// Request to start generating schedule
 			req = new HttpEntity<>(headers);
-			// TODO this will throw a BadRequest if the schedule already exists
 			restTemplate.exchange(linkToSchedule.getHref(), HttpMethod.POST, req, Object.class);
 			// This type is used to decode the response schedule
 			ParameterizedTypeReference<EntityModel<Schedule>> scheduleTypeReference = 
@@ -172,5 +176,10 @@ public class ScheduleService extends MyService {
 			restTemplate.exchange(linkToConfirmSchedule.get().toUri(), HttpMethod.PUT, req, Object.class);
 			log.info("If it existed, the schedule has been confirmed");
 		}
+	}
+	
+	public EntityModel<Schedule> updateSchedule(YearMonth yearMonth, Schedule schedule) {
+		// TODO
+		return null;
 	}
 }

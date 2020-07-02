@@ -1,5 +1,6 @@
 package guardians.webapp.controllers;
 
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import guardians.webapp.controllers.assemblers.DoctorAssembler;
 import guardians.webapp.controllers.assemblers.ScheduleAssembler;
@@ -196,7 +198,8 @@ public class ScheduleController {
 	}
 	
 	@GetMapping(value = "/{yearMonth}/download-as-excel", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-	public ResponseEntity<byte[]> downloadExcelFor(@PathVariable YearMonth yearMonth, @RequestParam(required = false) Boolean useXlsx) {
+	public ResponseEntity<byte[]> downloadExcelFor(@PathVariable YearMonth yearMonth, 
+			@RequestParam(required = false) Boolean useXlsx) throws IOException {
 		log.info("Request to get the excel for the schedule of " + yearMonth);
 		if (useXlsx == null) {
 			log.info("The filetype to be created was not specified. Using Xlsx: " + defaultUseXlsx);
@@ -228,5 +231,18 @@ public class ScheduleController {
 		}
 		
 		return resp;
+	}
+	
+	@PostMapping("/{yearMonth}")
+	public String updateSchedule(@PathVariable YearMonth yearMonth, @RequestParam MultipartFile scheduleFile,
+			Model model) throws IOException {
+		log.info("Request received: update schedule of " + yearMonth +  " with " + scheduleFile.getOriginalFilename());
+		log.info("Trying to convert the file to a schedule");
+		boolean isXlsx = scheduleFile.getOriginalFilename().endsWith(".xlsx");
+		Schedule schedule = schedule2ExcelService.fromExcel(scheduleFile.getInputStream(), isXlsx);
+		log.info("Trying to update the schedule");
+		scheduleService.updateSchedule(yearMonth, schedule);
+		log.info("The schedule has been updated");
+		return getSchedule(yearMonth, false, model);
 	}
 }

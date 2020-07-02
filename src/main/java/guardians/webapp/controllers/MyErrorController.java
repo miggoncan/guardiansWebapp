@@ -1,5 +1,7 @@
 package guardians.webapp.controllers;
 
+import java.io.IOException;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 
@@ -46,6 +48,12 @@ public class MyErrorController implements ErrorController {
 	public String notFoundHandler(NotFound e) {
 		log.info("Caught NotFound exception: " + e);
 		return "errors/error-404";
+	}
+	
+	@ExceptionHandler(IOException.class)
+	public String ioExceptionHandler(IOException e) {
+		log.info("Caught IOException: " + e);
+		return "errors/error-io";
 	}
 
 	@Override

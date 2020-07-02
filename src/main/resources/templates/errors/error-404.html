@@ -15,6 +15,8 @@
 <title th:text="#{error.title}"></title>
 </head>
 <body>
+	<div th:include="navbar.html"></div>
+
 	<div class="container">
 		<h1>404 Not Found</h1>
 		<h3 th:text="#{error-404.message}"></h3>

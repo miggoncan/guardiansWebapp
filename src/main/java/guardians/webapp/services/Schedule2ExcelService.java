@@ -2,6 +2,7 @@ package guardians.webapp.services;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.YearMonth;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,7 +51,7 @@ public class Schedule2ExcelService {
 	@Value("${guardians.excel.column-width}")
 	private Integer colWidth;
 
-	public ByteArrayOutputStream toExcel(Schedule schedule, boolean useXlsx) {
+	public ByteArrayOutputStream toExcel(Schedule schedule, boolean useXlsx) throws IOException {
 		log.info("Request to convert to excel");
 		YearMonth yearMonth = YearMonth.of(schedule.getYear(), schedule.getMonth());
 		log.info("The schedule is for " + yearMonth);
@@ -189,14 +190,15 @@ public class Schedule2ExcelService {
 		
 		log.info("Excel generation finished. Writing the workbook to an output stream");
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		try {
-			workbook.write(outputStream);
-			workbook.close();
-		} catch (IOException e) {
-			// TODO handle exception
-			log.error("Unexpected IOException: " + e.toString());
-		}
+		workbook.write(outputStream);
+		workbook.close();
+
 		
 		return outputStream;
+	}
+	
+	public Schedule fromExcel(InputStream inputStream, boolean isXlsx) {
+		// TODO
+		return null;
 	}
 }

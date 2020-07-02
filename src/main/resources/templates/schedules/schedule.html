@@ -149,10 +149,36 @@
 	 		</form>
 	 		<a class="btn btn-primary float-right m-2" role="button" th:text="#{schedule.uploadEditedExcel}"
 	 			th:if="${#maps.containsKey(schedule.links, 'confirm')}" 
-		 		th:href="${schedule.links['scheduleDownload']}"></a>
+		 		data-toggle="modal" data-target="#updateScheduleModal"></a>
 		 	<a class="btn btn-info float-right m-2" role="button" th:text="#{schedule.downloadAsExcel}" 
 		 		th:href="${schedule.links['scheduleDownload']}"></a>
 		 </div>
+	</div>
+	
+	<div class="modal fade" id="updateScheduleModal" tabindex="-1" role="dialog" aria-labelledby="updateScheduleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="updateScheduleModalLabel" 
+	        	th:text="#{schedule.updateScheduleTitle} + ' ' + ${yearMonth}"></h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <form th:action="${schedule.links['self']}" method="POST" enctype="multipart/form-data">
+		      <div class="modal-body">
+				  <div class="custom-file">
+				    <input type="file" class="custom-file-input" id="scheduleFile" name="scheduleFile" required="true"/>
+				    <label class="custom-file-label" for="scheduleFile" th:text="#{chooseFile}"></label>
+				  </div>
+		      </div>
+		      <div class="modal-footer">
+		      	<button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{cancel}"></button>
+		        <button type="submit" class="btn btn-primary" th:text="#{confirm}"></button>
+		      </div>
+	      </form>
+	    </div>
+	  </div>
 	</div>
 
 	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
