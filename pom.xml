@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>guardians.webapp</groupId>
 	<artifactId>guardiansWebapp</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>guardiansWebapp</name>
 	<description>The webapp that provides access to the guardians application</description>
 
@@ -39,12 +39,16 @@
 		  <groupId>org.apache.httpcomponents</groupId>
 		  <artifactId>httpclient</artifactId>
 		 </dependency>
+		<!-- Devtools allow to quickly change the source code and apply 
+		     changes to the running application without the need to 
+		     restart it completely
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
+		-->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -80,6 +84,16 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<excludes>
+					<exclude>**/application.properties</exclude>
+					<exclude>keystore/**</exclude>
+				</excludes>
+			</resource>
+		</resources>
 	</build>
 
 </project>

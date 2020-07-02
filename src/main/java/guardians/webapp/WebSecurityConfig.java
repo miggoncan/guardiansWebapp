@@ -32,6 +32,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		// TODO allow CSRF
 		http.csrf().disable();
 		http
+			.requiresChannel()
+				.anyRequest().requiresSecure()
+				.and()
 			.formLogin()
 				.permitAll()
 				.and()
@@ -40,10 +43,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.permitAll()
 				.and()
 			.authorizeRequests()
-				.anyRequest().authenticated()
-				.and()
-			.formLogin()
-				.and()
-			.httpBasic();
+				.anyRequest().authenticated();
 	}
 }
